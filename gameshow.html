@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Cita-Citaku - Game Show Profesi TK</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Quicksand -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti untuk Efek Kemenangan -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Fredoka', 'Quicksand', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Claymorphism 3D Style (Model Liat / Malam Benda 3D) */
+        .clay-card {
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 
+                0px 15px 25px rgba(0, 0, 0, 0.15),
+                inset -8px -8px 16px rgba(0, 0, 0, 0.08),
+                inset 8px 8px 16px rgba(255, 255, 255, 0.95);
+            border: 5px solid #fff;
+        }
+
+        .clay-button {
+            border-radius: 24px;
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 
+                0px 10px 0px 0px rgba(0,0,0,0.2),
+                inset -5px -5px 10px rgba(0,0,0,0.15),
+                inset 5px 5px 10px rgba(255,255,255,0.8);
+            cursor: pointer;
+        }
+
+        .clay-button:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        .clay-button:active {
+            transform: translateY(7px) scale(0.98);
+            box-shadow: 
+                0px 3px 0px 0px rgba(0,0,0,0.2),
+                inset -3px -3px 6px rgba(0,0,0,0.15),
+                inset 3px 3px 6px rgba(255,255,255,0.8);
+        }
+
+        .clay-badge {
+            box-shadow: 
+                inset -4px -4px 8px rgba(0,0,0,0.15),
+                inset 4px 4px 8px rgba(255,255,255,0.9);
+        }
+
+        /* Animations */
+        @keyframes bounce-fun {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-14px) rotate(-2deg); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 12px rgba(255, 223, 0, 0.8)); }
+            50% { filter: drop-shadow(0 0 28px rgba(255, 223, 0, 1)); }
+        }
+
+        @keyframes spotlight {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .animate-bounce-fun {
+            animation: bounce-fun 2.2s infinite ease-in-out;
+        }
+
+        .glow-effect {
+            animation: pulse-glow 1.8s infinite ease-in-out;
+        }
+
+        /* Studio Gameshow Background Background */
+        .bg-gameshow {
+            background: linear-gradient(-45deg, #4ed7ff, #38ef7d, #ff66c4, #ffde59);
+            background-size: 300% 300%;
+            animation: spotlight 12s ease infinite;
+        }
+
+        /* Floating Studio Lights */
+        .studio-light {
+            box-shadow: 0 0 30px 15px rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-gameshow min-h-screen flex flex-col justify-between overflow-x-hidden text-gray-800 relative">
+
+    <!-- OVERLAY AUDIO START HELPER (Memastikan Web Audio Aktif) -->
+    <div id="audio-init-overlay" class="fixed inset-0 bg-purple-900/80 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white p-6 text-center cursor-pointer" onclick="initAudioEngine()">
+        <div class="clay-card p-8 bg-white text-gray-800 max-w-md w-full flex flex-col items-center animate-bounce-fun">
+            <div class="w-24 h-24 rounded-full bg-yellow-400 flex items-center justify-center text-5xl mb-4 clay-badge">
+                📺
+            </div>
+            <h2 class="text-3xl font-extrabold text-purple-700 mb-2">STUDIO GAME SHOW</h2>
+            <p class="text-gray-600 mb-6 font-semibold">Klik untuk menghidupkan Musik & Suara Seru!</p>
+            <button class="clay-button bg-pink-500 text-white font-black text-2xl px-8 py-4 border-pink-300 w-full">
+                <i class="fa-solid fa-play mr-2"></i> MASUK STUDIO!
+            </button>
+        </div>
+    </div>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="p-4 flex justify-between items-center max-w-5xl mx-auto w-full z-10">
+        <!-- Logo / Studio Badge -->
+        <div class="flex items-center gap-3 clay-card px-5 py-2.5 bg-yellow-400 border-yellow-200">
+            <span class="text-3xl animate-bounce-fun">🎭</span>
+            <div>
+                <h1 class="text-xl md:text-2xl font-black text-yellow-900 leading-none">PROFESI KIDS</h1>
+                <span class="text-xs font-bold text-yellow-800 tracking-widest uppercase">Game Show TK</span>
+            </div>
+        </div>
+
+        <!-- Score & Audio Controls -->
+        <div class="flex items-center gap-3">
+            <!-- Poin Bintang -->
+            <div class="clay-card bg-orange-400 text-white px-4 py-2 flex items-center gap-2 border-orange-300">
+                <i class="fa-solid fa-star text-yellow-200 text-2xl glow-effect"></i>
+                <span id="score-text" class="text-2xl font-black">0</span>
+            </div>
+
+            <!-- Tombol Sound FX & Musik -->
+            <button id="btn-sound" onclick="toggleSound()" class="clay-button bg-purple-500 text-white w-12 h-12 flex items-center justify-center text-xl border-purple-300" title="Audio">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME CONTAINER -->
+    <main class="flex-1 flex items-center justify-center p-4 max-w-4xl mx-auto w-full relative z-10">
+
+        <!-- ================= 1. START SCREEN ================= -->
+        <div id="screen-start" class="clay-card p-6 md:p-10 w-full text-center bg-white border-4 border-yellow-300 relative overflow-hidden">
+            <div class="relative w-40 h-40 mx-auto mb-4 animate-bounce-fun">
+                <div class="w-40 h-40 rounded-full bg-sky-400 clay-badge flex items-center justify-center text-8xl shadow-inner">
+                    🦁
+                </div>
+                <div class="absolute -bottom-2 -right-2 bg-yellow-400 rounded-full p-3 text-3xl border-4 border-white shadow-lg">
+                    🎤
+                </div>
+            </div>
+
+            <h2 class="text-3xl md:text-5xl font-black text-purple-700 mb-2">Petualangan Cita-Citaku!</h2>
+            <p class="text-lg md:text-xl text-gray-600 mb-8 font-bold">Jelajahi 10 Lompatan Profesi & Jadilah Bintang Gameshow!</p>
+
+            <button onclick="startGame()" class="clay-button bg-green-500 hover:bg-green-600 text-white text-2xl md:text-3xl font-black px-10 py-5 border-green-300 tracking-wide w-full md:w-auto">
+                <i class="fa-solid fa-gamepad mr-3"></i> MULAI PETUALANGAN!
+            </button>
+        </div>
+
+        <!-- ================= 2. EXPLORER MAP (10 LOMPATAN) ================= -->
+        <div id="screen-map" class="hidden clay-card p-6 w-full bg-sky-50 border-4 border-sky-200 flex flex-col items-center">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="text-3xl">🗺️</span>
+                <h2 class="text-2xl md:text-3xl font-black text-purple-800">Peta Lompatan Cita-Cita</h2>
+            </div>
+            <p class="text-sm md:text-base font-bold text-gray-600 mb-6 text-center">Tekan lompatan aktif untuk menjawab kuis tantangan!</p>
+
+            <!-- Map Grid 10 Step Path -->
+            <div id="map-nodes-container" class="grid grid-cols-5 gap-3 md:gap-6 my-2 w-full max-w-2xl justify-items-center">
+                <!-- Node lompatan akan di-render secara dinamis oleh JS -->
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="btn-continue-quiz" onclick="openCurrentQuiz()" class="clay-button bg-yellow-400 text-yellow-950 font-black px-8 py-3.5 text-xl border-yellow-200 glow-effect">
+                    Lompat Sekarang! <i class="fa-solid fa-shoe-prints ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= 3. GAMESHOW QUIZ CARD ================= -->
+        <div id="screen-quiz" class="hidden clay-card p-6 md:p-8 w-full bg-gradient-to-b from-yellow-50 to-orange-50 border-4 border-orange-200 relative">
+            
+            <!-- Quiz Header Info -->
+            <div class="flex justify-between items-center mb-4">
+                <span id="quiz-step-tag" class="clay-badge bg-purple-600 text-white font-extrabold px-5 py-2 rounded-full text-base md:text-lg">
+                    Lompatan 1 / 10
+                </span>
+                <button onclick="backToMap()" class="clay-button bg-gray-200 text-gray-700 font-bold px-4 py-2 border-gray-300 text-sm">
+                    <i class="fa-solid fa-map mr-1"></i> Peta
+                </button>
+            </div>
+
+            <!-- Quiz Display Character Avatar & Question -->
+            <div class="flex flex-col md:flex-row items-center gap-6 mb-6 bg-white/70 p-4 md:p-6 rounded-3xl border-2 border-orange-100">
+                <div class="relative w-36 h-36 md:w-44 md:h-44 flex-shrink-0">
+                    <div id="quiz-avatar" class="w-full h-full rounded-3xl bg-pink-400 clay-badge flex items-center justify-center text-7xl md:text-8xl border-4 border-white shadow-md">
+                        🧑‍🚒
+                    </div>
+                    <!-- Audio Replay Button -->
+                    <button onclick="playProfessionAudio()" class="absolute -bottom-2 -right-2 clay-button bg-red-500 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl border-red-300" title="Dengar Suara Narator">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+
+                <!-- Pertanyaan Kuis -->
+                <div class="text-center md:text-left flex-1">
+                    <span id="quiz-hint" class="text-xs font-black text-orange-500 tracking-widest uppercase mb-1 block">Tebak Siapa Aku?</span>
+                    <h3 id="quiz-question" class="text-2xl md:text-3xl font-black text-gray-800 leading-snug">
+                        Aku bertugas memadamkan api. Siapakah aku?
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Pilihan Jawaban (Interactive Cards) -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Option buttons generated by JS -->
+            </div>
+
+        </div>
+
+        <!-- ================= 4. RESULT / GAME OVER SCREEN ================= -->
+        <div id="screen-result" class="hidden clay-card p-8 text-center bg-white border-4 border-green-300 w-full max-w-lg">
+            <div class="text-8xl mb-4 animate-bounce-fun">🏆</div>
+            <h2 class="text-3xl md:text-4xl font-black text-green-600 mb-2">HORE! JAUARA GAMESHOW!</h2>
+            <p class="text-gray-600 font-bold text-lg mb-6">Kamu berhasil menyelesaikan 10 Lompatan Profesi dengan hebat!</p>
+
+            <div class="clay-card bg-yellow-100 p-4 mb-6 border-yellow-300 inline-block w-full">
+                <p class="text-sm font-bold text-yellow-800">Total Bintang Kamu:</p>
+                <div class="text-5xl font-black text-yellow-600 flex items-center justify-center gap-2 mt-1">
+                    <i class="fa-solid fa-star text-yellow-400 glow-effect"></i>
+                    <span id="final-score">100</span>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="clay-button bg-blue-500 hover:bg-blue-600 text-white font-black text-2xl px-10 py-4 border-blue-300 w-full">
+                <i class="fa-solid fa-rotate-right mr-2"></i> MAIN LAGI
+            </button>
+        </div>
+
+    </main>
+
+    <!-- POPUP MODAL FEEDBACK (JAWABAN BENAR / SALAH) -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div id="modal-card" class="clay-card p-6 md:p-8 bg-white max-w-md w-full text-center transform transition-all duration-300 scale-95">
+            <div id="modal-icon" class="text-8xl mb-2">🎉</div>
+            <h3 id="modal-title" class="text-3xl font-black mb-2">Jawaban Benar!</h3>
+            <p id="modal-desc" class="text-gray-600 font-bold text-lg mb-6">Kamu hebat sekali!</p>
+            <button id="modal-btn" onclick="nextQuestion()" class="clay-button w-full bg-green-500 text-white text-xl font-black py-4 border-green-300">
+                Lanjut Lompat! <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="p-3 text-center text-sm font-black text-white/90 drop-shadow">
+        Gim Edukasi TK - Studio Gameshow Profesi Interaktif
+    </footer>
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        /* ================= DATA 10 LOMPATAN PROFESI ================= */
+        const quizData = [
+            {
+                id: 1,
+                profession: "Pemadam Kebakaran",
+                avatar: "🧑‍🚒",
+                color: "bg-red-400",
+                question: "Siapa yang mengendarai mobil merah dan bertugas memadamkan api?",
+                options: [
+                    { text: "Pemadam Kebakaran", emoji: "🧑‍🚒", correct: true },
+                    { text: "Koki", emoji: "👨‍🍳", correct: false },
+                    { text: "Pilot", emoji: "👨‍✈️", correct: false }
+                ],
+                soundText: "Pemadam Kebakaran! Mengendarai mobil merah dan siap memadamkan api!"
+            },
+            {
+                id: 2,
+                profession: "Dokter",
+                avatar: "👩‍⚕️",
+                color: "bg-teal-400",
+                question: "Siapa yang membawa stetoskop dan memeriksa anak saat sakit?",
+                options: [
+                    { text: "Petani", emoji: "👨‍🌾", correct: false },
+                    { text: "Dokter", emoji: "👩‍⚕️", correct: true },
+                    { text: "Polisi", emoji: "👮‍♂️", correct: false }
+                ],
+                soundText: "Dokter! Memeriksa kesehatan anak-anak agar cepat sembuh!"
+            },
+            {
+                id: 3,
+                profession: "Polisi",
+                avatar: "👮‍♂️",
+                color: "bg-blue-400",
+                question: "Siapa yang menjaga lalu lintas dan keamanan di jalan raya?",
+                options: [
+                    { text: "Polisi", emoji: "👮‍♂️", correct: true },
+                    { text: "Pelukis", emoji: "🧑‍🎨", correct: false },
+                    { text: "Astronaut", emoji: "👨‍🚀", correct: false }
+                ],
+                soundText: "Polisi! Siap menjaga keamanan dan ketertiban jalan raya!"
+            },
+            {
+                id: 4,
+                profession: "Guru",
+                avatar: "👩‍🏫",
+                color: "bg-pink-400",
+                question: "Siapa yang mengajar anak-anak bernyanyi, membaca, dan menggambar di sekolah?",
+                options: [
+                    { text: "Nakhoda", emoji: "👨‍✈️", correct: false },
+                    { text: "Guru", emoji: "👩‍🏫", correct: true },
+                    { text: "Montir", emoji: "🧑‍🔧", correct: false }
+                ],
+                soundText: "Guru! Mengajar anak-anak pintar di sekolah!"
+            },
+            {
+                id: 5,
+                profession: "Koki",
+                avatar: "👨‍🍳",
+                color: "bg-orange-400",
+                question: "Siapa yang memakai topi putih tinggi dan memasak makanan lezat?",
+                options: [
+                    { text: "Dokter Gigi", emoji: "🦷", correct: false },
+                    { text: "Koki / Chef", emoji: "👨‍🍳", correct: true },
+                    { text: "Penyanyi", emoji: "🎤", correct: false }
+                ],
+                soundText: "Koki! Memasak makanan bergizi dan lezat!"
+            },
+            {
+                id: 6,
+                profession: "Pilot",
+                avatar: "👨‍✈️",
+                color: "bg-indigo-400",
+                question: "Siapa yang menerbangkan pesawat terbang tinggi di udara?",
+                options: [
+                    { text: "Pilot", emoji: "👨‍✈️", correct: true },
+                    { text: "Petani", emoji: "👨‍🌾", correct: false },
+                    { text: "Tukang Kayu", emoji: "🪵", correct: false }
+                ],
+                soundText: "Pilot! Mengendalikan pesawat terbang menjelajah angkasa!"
+            },
+            {
+                id: 7,
+                profession: "Petani",
+                avatar: "👨‍🌾",
+                color: "bg-green-400",
+                question: "Siapa yang menanam padi, sayur, dan buah-buahan di sawah?",
+                options: [
+                    { text: "Astronaut", emoji: "👨‍🚀", correct: false },
+                    { text: "Masinis", emoji: "🚆", correct: false },
+                    { text: "Petani", emoji: "👨‍🌾", correct: true }
+                ],
+                soundText: "Petani! Menanam bahan makanan sehat untuk kita semua!"
+            },
+            {
+                id: 8,
+                profession: "Astronaut",
+                avatar: "👨‍🚀",
+                color: "bg-purple-400",
+                question: "Siapa yang pergi ke luar angkasa menggunakan roket meluncur?",
+                options: [
+                    { text: "Astronaut", emoji: "👨‍🚀", correct: true },
+                    { text: "Pemadam Kebakaran", emoji: "🧑‍🚒", correct: false },
+                    { text: "Guru", emoji: "👩‍🏫", correct: false }
+                ],
+                soundText: "Astronaut! Menjelajah bintang dan bulan di luar angkasa!"
+            },
+            {
+                id: 9,
+                profession: "Pelukis",
+                avatar: "🧑‍🎨",
+                color: "bg-yellow-400",
+                question: "Siapa yang menggunakan kuas dan cat warna untuk membuat lukisan indah?",
+                options: [
+                    { text: "Dokter", emoji: "👩‍⚕️", correct: false },
+                    { text: "Pelukis", emoji: "🧑‍🎨", correct: true },
+                    { text: "Polisi", emoji: "👮‍♂️", correct: false }
+                ],
+                soundText: "Pelukis! Mewarnai kanvas dengan lukisan indah!"
+            },
+            {
+                id: 10,
+                profession: "Masinis",
+                avatar: "🧑‍✈️",
+                color: "bg-emerald-400",
+                question: "Siapa yang mengendalikan kereta api panjang di atas rel?",
+                options: [
+                    { text: "Masinis Kereta", emoji: "🚆", correct: true },
+                    { text: "Koki", emoji: "👨‍🍳", correct: false },
+                    { text: "Pilot", emoji: "✈️", correct: false }
+                ],
+                soundText: "Masinis! Mengemudikan kereta api tutuutt gujes gujes!"
+            }
+        ];
+
+        /* ================= GAME STATE VARIABLES ================= */
+        let currentStep = 0; // Index 0 - 9
+        let score = 0;
+        let isSoundEnabled = true;
+        let audioCtx = null;
+        let bgmInterval = null;
+
+        /* ================= AUDIO ENGINE (WEB AUDIO SYNTHESIZER) ================= */
+        function initAudioEngine() {
+            document.getElementById('audio-init-overlay').classList.add('hidden');
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            startBGM();
+            speak("Selamat datang di Studio Gameshow Profesi Kids!");
+        }
+
+        // Play Tone Generator for SFX
+        function playTone(freq, duration, type = 'sine', volume = 0.15) {
+            if (!isSoundEnabled || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        // Sound Effects
+        function soundClick() {
+            playTone(523.25, 0.1, 'triangle', 0.2); // C5
+        }
+
+        function soundCorrect() {
+            if (!isSoundEnabled) return;
+            // Arpeggio Melodic Cheer
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C
+            notes.forEach((freq, idx) => {
+                setTimeout(() => playTone(freq, 0.2, 'sine', 0.25), idx * 80);
+            });
+        }
+
+        function soundWrong() {
+            if (!isSoundEnabled) return;
+            playTone(300, 0.2, 'sawtooth', 0.2);
+            setTimeout(() => playTone(220, 0.3, 'sawtooth', 0.2), 150);
+        }
+
+        // BGM Generator (Fun Game Show Rhythm)
+        function startBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            const bgmNotes = [261.63, 329.63, 392.00, 329.63, 349.23, 440.00, 392.00, 329.63];
+            let noteIndex = 0;
+
+            bgmInterval = setInterval(() => {
+                if (isSoundEnabled && audioCtx && audioCtx.state === 'running') {
+                    playTone(bgmNotes[noteIndex], 0.15, 'sine', 0.03); // Soft background melody
+                    noteIndex = (noteIndex + 1) % bgmNotes.length;
+                }
+            }, 300);
+        }
+
+        /* ================= VOICE-OVER TTS (SUARA RAMAH ANAK) ================= */
+        function speak(text) {
+            if (!isSoundEnabled) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Reset audio sebelumnya
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.pitch = 1.3; // Suara agak tinggi, lebih ramah & gembira untuk TK
+                utterance.rate = 0.95;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            const soundIcon = document.getElementById('sound-icon');
+            if (isSoundEnabled) {
+                soundIcon.className = "fa-solid fa-volume-high";
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                speak("Suara diaktifkan!");
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark";
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            }
+        }
+
+        /* ================= NAVIGATION CONTROLLER ================= */
+        function showScreen(screenId) {
+            soundClick();
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-map').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function startGame() {
+            currentStep = 0;
+            score = 0;
+            updateScoreUI();
+            renderMapNodes();
+            showScreen('screen-map');
+            speak("Mari kita mulai petualangan 10 lompatan profesi!");
+        }
+
+        function backToMap() {
+            renderMapNodes();
+            showScreen('screen-map');
+        }
+
+        /* ================= RENDER MAP (10 LOMPATAN) ================= */
+        function renderMapNodes() {
+            const container = document.getElementById('map-nodes-container');
+            container.innerHTML = '';
+
+            quizData.forEach((q, index) => {
+                const node = document.createElement('div');
+                node.className = "flex flex-col items-center cursor-pointer transform transition hover:scale-110";
+
+                let stateStyle = "bg-gray-300 text-gray-500 border-gray-400 opacity-70"; // Locked
+                let statusIcon = index + 1;
+
+                if (index < currentStep) {
+                    // Completed Step
+                    stateStyle = "bg-green-400 text-white border-green-200";
+                    statusIcon = `<i class="fa-solid fa-check text-2xl"></i>`;
+                } else if (index === currentStep) {
+                    // Active Active Step
+                    stateStyle = "bg-yellow-400 text-yellow-950 border-yellow-200 animate-bounce glow-effect";
+                    statusIcon = `<i class="fa-solid fa-star text-2xl"></i>`;
+                }
+
+                node.innerHTML = `
+                    <button onclick="selectStep(${index})" ${index > currentStep ? 'disabled' : ''} 
+                            class="clay-button w-14 h-14 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center text-xl md:text-2xl font-black ${stateStyle}">
+                        ${statusIcon}
+                    </button>
+                    <span class="text-xs font-black mt-1 text-gray-700">Lompatan ${index + 1}</span>
+                `;
+                container.appendChild(node);
+            });
+        }
+
+        function selectStep(index) {
+            if (index <= currentStep) {
+                currentStep = index;
+                openCurrentQuiz();
+            }
+        }
+
+        /* ================= RENDER QUIZ ================= */
+        function openCurrentQuiz() {
+            showScreen('screen-quiz');
+            const data = quizData[currentStep];
+
+            document.getElementById('quiz-step-tag').innerText = `Lompatan ${currentStep + 1} / 10`;
+            document.getElementById('quiz-avatar').innerText = data.avatar;
+            document.getElementById('quiz-avatar').className = `w-full h-full rounded-3xl ${data.color} clay-badge flex items-center justify-center text-7xl md:text-8xl border-4 border-white shadow-inner`;
+            document.getElementById('quiz-question').innerText = data.question;
+
+            // Render Choices
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            data.options.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => checkAnswer(opt.correct, data);
+                btn.className = `clay-button bg-white hover:bg-yellow-100 text-gray-800 p-4 md:p-5 border-3 border-orange-200 flex items-center gap-4 text-left font-black text-lg md:text-xl w-full`;
+                btn.innerHTML = `
+                    <span class="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center text-3xl flex-shrink-0 clay-badge">
+                        ${opt.emoji}
+                    </span>
+                    <span>${opt.text}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            speak(data.question);
+        }
+
+        function playProfessionAudio() {
+            soundClick();
+            const data = quizData[currentStep];
+            speak(data.soundText);
+        }
+
+        /* ================= CHECK ANSWER & FEEDBACK ================= */
+        function checkAnswer(isCorrect, data) {
+            const modal = document.getElementById('feedback-modal');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const icon = document.getElementById('modal-icon');
+            const btn = document.getElementById('modal-btn');
+
+            modal.classList.remove('hidden');
+
+            if (isCorrect) {
+                soundCorrect();
+                score += 10;
+                updateScoreUI();
+                icon.innerText = "🎉";
+                title.innerText = "Hebat! Benar!";
+                title.className = "text-3xl font-black text-green-600 mb-2";
+                desc.innerText = `Luar biasa! Itu adalah ${data.profession}!`;
+                btn.className = "clay-button w-full bg-green-500 text-white text-xl font-black py-4 border-green-300";
+                
+                // Confetti Burst
+                confetti({
+                    particleCount: 60,
+                    spread: 70,
+                    origin: { y: 0.7 }
+                });
+
+                speak(`Hore! Jawabanmu benar! Itu adalah ${data.profession}!`);
+            } else {
+                soundWrong();
+                icon.innerText = "💡";
+                title.innerText = "Coba Lagi Yuk!";
+                title.className = "text-3xl font-black text-orange-500 mb-2";
+                desc.innerText = "Hampir tepat! Yuk tebak sekali lagi!";
+                btn.className = "clay-button w-full bg-orange-500 text-white text-xl font-black py-4 border-orange-300";
+                
+                speak("Ayo coba tebak sekali lagi!");
+            }
+        }
+
+        function nextQuestion() {
+            soundClick();
+            document.getElementById('feedback-modal').classList.add('hidden');
+            
+            if (currentStep < quizData.length - 1) {
+                currentStep++;
+                renderMapNodes();
+                openCurrentQuiz();
+            } else {
+                showResultScreen();
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-text').innerText = score;
+        }
+
+        /* ================= RESULT SCREEN ================= */
+        function showResultScreen() {
+            showScreen('screen-result');
+            document.getElementById('final-score').innerText = score;
+            soundCorrect();
+            
+            speak(`Selamat! Kamu telah menyelesaikan seluruh 10 lompatan profesi dengan skor ${score}! Kamu anak yang sangat pintar!`);
+            
+            // Grand Celebration Confetti
+            confetti({
+                particleCount: 180,
+                spread: 100,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function restartGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
